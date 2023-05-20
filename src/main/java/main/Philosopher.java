@@ -4,10 +4,10 @@ import java.util.Random;
 
 public class Philosopher implements Runnable {
     private final int philosopherNumber;
-    private PhilosopherStatus status;
+    private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
     public Philosopher(int philosopherNumber) {
         this.philosopherNumber = philosopherNumber;
-        status = PhilosopherStatus.THINKING;
+        status[philosopherNumber] = PhilosopherStatus.THINKING;
     }
     @Override
     public void run() {
