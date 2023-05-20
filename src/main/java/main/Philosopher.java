@@ -15,7 +15,7 @@ public class Philosopher implements Runnable {
         int sleepTime;
         Random random = new Random();
         while (timesThroughLoop < 5) {
-            sleepTime = random.nextInt(5);
+            sleepTime = random.nextInt(5000);
 
             try {
                 System.out.printf("Philosopher %d is THINKING\n", philosopherNumber);
