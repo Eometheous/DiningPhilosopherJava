@@ -1,5 +1,6 @@
 package main;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -32,6 +33,43 @@ public class Philosopher implements Runnable {
                 throw new RuntimeException(e);
             }
 
+            try {
+                pickUpForks();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            System.out.printf("Philosopher %d is EATING\n", philosopherNumber);
+
+            try {
+                eating(sleepTime);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+//            System.out.printf("Left of %d is ", philosopherNumber);
+//            if (status[left_neighbor()] == THINKING) {
+//                System.out.print("THINKING\n");
+//            }
+//            else if (status[left_neighbor()] == HUNGRY) {
+//                System.out.print("HUNGRY\n");
+//            }
+//            else {
+//                System.out.print("EATNG\n");
+//            }
+//            System.out.printf("Right of %d is ", philosopherNumber);
+//            if (state[right_neighbor(phil_num)] == THINKING) {
+//                printf("THINKING\n\n");
+//            }
+//            else if (state[right_neighbor(phil_num)] == HUNGRY) {
+//                printf("HUNGRY\n\n");
+//            }
+//            else {
+//                printf("EATNG\n\n");
+//            }
+
+            putDownForks();
+
             timesThroughLoop++;
         }
     }
@@ -50,10 +88,15 @@ public class Philosopher implements Runnable {
         status[philosopherNumber] = THINKING;
         test(left_neighbor());
         test(right_neighbor());
+        notifyAll();
     }
 
     private void thinking(int sleepTime) throws InterruptedException {
         Thread.sleep(sleepTime);
+    }
+
+    private void eating(int sleep_time) throws InterruptedException {
+        Thread.sleep(sleep_time);
     }
 
     /**
