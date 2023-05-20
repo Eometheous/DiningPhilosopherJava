@@ -38,7 +38,7 @@ public class Philosopher implements Runnable {
 
     private synchronized void pickUpForks() throws InterruptedException {
         status[philosopherNumber] = HUNGRY;
-        test();
+        test(philosopherNumber);
 
         while (status[philosopherNumber] != EATING) {
             canEatCondition.await();
@@ -48,8 +48,8 @@ public class Philosopher implements Runnable {
 
     private synchronized void putDownForks() {
         status[philosopherNumber] = THINKING;
-        test(left_neighbor(phil_num));
-        test(right_neighbor(phil_num));
+        test(left_neighbor());
+        test(right_neighbor());
     }
 
     private void thinking(int sleepTime) throws InterruptedException {
@@ -88,7 +88,7 @@ public class Philosopher implements Runnable {
     }
 
 
-    private void test()
+    private void test(int philosopherNumber)
     {
         //if im hungry and left and right arent eatting then let me eat
         if ((status[this.left_neighbor()] != EATING) && (status[philosopherNumber] == HUNGRY) && (status[this.right_neighbor()] != EATING))
