@@ -1,15 +1,18 @@
 package main;
 
 import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static main.PhilosopherStatus.*;
 
 public class Philosopher implements Runnable {
-
-
     private final int philosopherNumber; // same as ID
     private static final int NUMBER_OF_PHILS = 5; // same as number of philosphers in the next line
     private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
+    private static final Lock lock = new ReentrantLock();
+    private static final Condition canEatCondition = lock.newCondition();
     public Philosopher(int philosopherNumber) {
         this.philosopherNumber = philosopherNumber;
         status[philosopherNumber] = PhilosopherStatus.THINKING;
@@ -31,6 +34,22 @@ public class Philosopher implements Runnable {
 
             timesThroughLoop++;
         }
+    }
+
+    private synchronized void pickUpForks() throws InterruptedException {
+        status[philosopherNumber] = HUNGRY;
+        test();
+
+        while (status[philosopherNumber] != EATING) {
+            canEatCondition.await();
+        }
+        notifyAll();
+    }
+
+    private synchronized void putDownForks() {
+        status[philosopherNumber] = THINKING;
+        test(left_neighbor(phil_num));
+        test(right_neighbor(phil_num));
     }
 
     private void thinking(int sleepTime) throws InterruptedException {
