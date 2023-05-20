@@ -1,6 +1,5 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -9,15 +8,25 @@ import java.util.concurrent.locks.ReentrantLock;
 import static main.PhilosopherStatus.*;
 
 public class Philosopher implements Runnable {
-    private final int philosopherNumber; // same as ID
     private static final int NUMBER_OF_PHILS = 5; // same as number of philosphers in the next line
     private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
     private static final Lock lock = new ReentrantLock();
-    private static final Condition canEatCondition = lock.newCondition();
+    private static final Condition[] canEatCondition = new Condition[5];
+    private final int philosopherNumber; // same as ID
+
+    /**
+     * Creates a Philosopher object
+     * @param philosopherNumber the number for this philosopher
+     */
     public Philosopher(int philosopherNumber) {
         this.philosopherNumber = philosopherNumber;
         status[philosopherNumber] = PhilosopherStatus.THINKING;
+        canEatCondition[philosopherNumber] = lock.newCondition();
     }
+
+    /**
+     * From implementing runnable. When the thread is executed the code in here is run.
+     */
     @Override
     public void run() {
         int timesThroughLoop = 0;
@@ -47,56 +56,56 @@ public class Philosopher implements Runnable {
                 throw new RuntimeException(e);
             }
 
-//            System.out.printf("Left of %d is ", philosopherNumber);
-//            if (status[left_neighbor()] == THINKING) {
-//                System.out.print("THINKING\n");
-//            }
-//            else if (status[left_neighbor()] == HUNGRY) {
-//                System.out.print("HUNGRY\n");
-//            }
-//            else {
-//                System.out.print("EATNG\n");
-//            }
-//            System.out.printf("Right of %d is ", philosopherNumber);
-//            if (state[right_neighbor(phil_num)] == THINKING) {
-//                printf("THINKING\n\n");
-//            }
-//            else if (state[right_neighbor(phil_num)] == HUNGRY) {
-//                printf("HUNGRY\n\n");
-//            }
-//            else {
-//                printf("EATNG\n\n");
-//            }
-
             putDownForks();
 
             timesThroughLoop++;
         }
     }
 
-    private synchronized void pickUpForks() throws InterruptedException {
+    /**
+     * Picks up the forks for this philosopher. If it is not able to eat, it will wait until it can
+     * @throws InterruptedException if the current thread is interrupted (and interruption of thread suspension is supported)
+     */
+    private void pickUpForks() throws InterruptedException {
+        lock.lock();
         status[philosopherNumber] = HUNGRY;
         test(philosopherNumber);
 
         while (status[philosopherNumber] != EATING) {
-            canEatCondition.await();
+            canEatCondition[philosopherNumber].await();
         }
-        notifyAll();
+        lock.unlock();
     }
 
-    private synchronized void putDownForks() {
+    /**
+     * Puts down the forks after eating and makes the philosopher go to the thinking state
+     */
+    private void putDownForks() {
+        lock.lock();
         status[philosopherNumber] = THINKING;
         test(left_neighbor());
         test(right_neighbor());
-        notifyAll();
+        lock.unlock();
     }
 
+    /**
+     * Thinking for a certain sleep time
+     * @param sleepTime the sleep time
+     * @throws InterruptedException if any thread has interrupted the current thread.
+     * The interrupted status of the current thread is cleared when this exception is thrown.
+     */
     private void thinking(int sleepTime) throws InterruptedException {
         Thread.sleep(sleepTime);
     }
 
-    private void eating(int sleep_time) throws InterruptedException {
-        Thread.sleep(sleep_time);
+    /**
+     * Eating for a certain sleep time
+     * @param sleepTime the sleep time
+     * @throws InterruptedException if any thread has interrupted the current thread.
+     * The interrupted status of the current thread is cleared when this exception is thrown.
+     */
+    private void eating(int sleepTime) throws InterruptedException {
+        Thread.sleep(sleepTime);
     }
 
     /**
@@ -114,12 +123,12 @@ public class Philosopher implements Runnable {
             return (philosopherNumber - 1);
         }
     }
+
     /**
      * returns the right neighbor
      * @return the philosopherNumber of the right neighbor.
      */
-    private int right_neighbor()
-    {
+    private int right_neighbor() {
         if ((philosopherNumber + 1) == NUMBER_OF_PHILS)
         {
             return 0;
@@ -130,20 +139,19 @@ public class Philosopher implements Runnable {
         }
     }
 
-
-    private void test(int philosopherNumber)
-    {
+    /**
+     * Tests to see if it is possible for the philosopher to eat.
+     * @param philosopherNumber the philosopher number
+     */
+    private void test(int philosopherNumber) {
+        lock.lock();
         //if im hungry and left and right arent eatting then let me eat
         if ((status[this.left_neighbor()] != EATING) && (status[philosopherNumber] == HUNGRY) && (status[this.right_neighbor()] != EATING))
         {
             status[philosopherNumber] = EATING;
-            // fIXX pthread_cond_signal(&cond_vars[id]);
-
+            canEatCondition[philosopherNumber].signal();
         }
+
+        lock.unlock();
     }
-
-
-
-
-
 }
