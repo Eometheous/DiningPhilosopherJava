@@ -8,7 +8,7 @@ public class Philosopher implements Runnable {
 
 
     private final int philosopherNumber; // same as ID
-    private final int NumberOfPhils = 5; // same as number of philosphers in the next line
+    private static final int NUMBER_OF_PHILS = 5; // same as number of philosphers in the next line
     private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
     public Philosopher(int philosopherNumber) {
         this.philosopherNumber = philosopherNumber;
@@ -45,7 +45,7 @@ public class Philosopher implements Runnable {
     {
         if (philosopherNumber == 0)
         {
-            return NumberOfPhils - 1;
+            return NUMBER_OF_PHILS - 1;
         }
         else
         {
@@ -58,7 +58,7 @@ public class Philosopher implements Runnable {
      */
     private int right_neighbor()
     {
-        if ((philosopherNumber + 1) == NumberOfPhils)
+        if ((philosopherNumber + 1) == NUMBER_OF_PHILS)
         {
             return 0;
         }
