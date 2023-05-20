@@ -18,7 +18,5 @@ public class Main {
         }
 
         executorService.shutdown();
-
-        System.out.println("Hello world!");
     }
 }
