@@ -1,5 +1,6 @@
 package main;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -12,6 +13,7 @@ public class Philosopher implements Runnable, DiningServer {
     private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
     private static final Lock lock = new ReentrantLock();
     private static final Condition[] canEatCondition = new Condition[5];
+    private static final ArrayList<Philosopher> philosophers = new ArrayList<>();
     private final int philosopherNumber; // same as ID
 
     /**
@@ -22,6 +24,7 @@ public class Philosopher implements Runnable, DiningServer {
         this.philosopherNumber = philosopherNumber;
         status[philosopherNumber] = PhilosopherStatus.THINKING;
         canEatCondition[philosopherNumber] = lock.newCondition();
+        philosophers.add(this);
     }
 
     /**
@@ -150,7 +153,8 @@ public class Philosopher implements Runnable, DiningServer {
     private void test(int philosopherNumber) {
         lock.lock();
         //if im hungry and left and right arent eatting then let me eat
-        if ((status[this.left_neighbor()] != EATING) && (status[philosopherNumber] == HUNGRY) && (status[this.right_neighbor()] != EATING))
+        if ((status[philosophers.get(philosopherNumber).left_neighbor()] != EATING) && (status[philosopherNumber] == HUNGRY)
+                && (status[philosophers.get(philosopherNumber).right_neighbor()] != EATING))
         {
             status[philosopherNumber] = EATING;
             canEatCondition[philosopherNumber].signal();
