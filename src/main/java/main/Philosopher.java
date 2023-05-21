@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static main.PhilosopherStatus.*;
 
-public class Philosopher implements Runnable {
+public class Philosopher implements Runnable, DiningServer {
     private static final int NUMBER_OF_PHILS = 5; // same as number of philosphers in the next line
     private static final PhilosopherStatus[] status = new PhilosopherStatus[5];
     private static final Lock lock = new ReentrantLock();
@@ -33,7 +33,7 @@ public class Philosopher implements Runnable {
         int sleepTime;
         Random random = new Random();
         while (timesThroughLoop < 5) {
-            sleepTime = random.nextInt(5000);
+            sleepTime = random.nextInt(1000);
 
             try {
                 System.out.printf("Philosopher %d is THINKING\n", philosopherNumber);
@@ -42,45 +42,49 @@ public class Philosopher implements Runnable {
                 throw new RuntimeException(e);
             }
 
-            try {
-                pickUpForks();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            System.out.printf("Philosopher %d is EATING\n", philosopherNumber);
+            takeForks(philosopherNumber);
 
             try {
+                System.out.printf("Philosopher %d is EATING\n", philosopherNumber);
                 eating(sleepTime);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
-            putDownForks();
+            System.out.printf("Philosopher %d is returning their forks\n", philosopherNumber);
+            returnForks(philosopherNumber);
 
             timesThroughLoop++;
         }
+        System.out.printf("Philosopher %d is done\n", philosopherNumber);
     }
 
     /**
-     * Picks up the forks for this philosopher. If it is not able to eat, it will wait until it can
-     * @throws InterruptedException if the current thread is interrupted (and interruption of thread suspension is supported)
+     * Takes the forks for this philosopher. If it is not able to eat, it will wait until it can
+     * @param philosopherNumber the philosopher taking the forks
      */
-    private void pickUpForks() throws InterruptedException {
+    @Override
+    public void takeForks(int philosopherNumber) {
         lock.lock();
         status[philosopherNumber] = HUNGRY;
         test(philosopherNumber);
 
         while (status[philosopherNumber] != EATING) {
-            canEatCondition[philosopherNumber].await();
+            try {
+                canEatCondition[philosopherNumber].await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         lock.unlock();
     }
 
     /**
-     * Puts down the forks after eating and makes the philosopher go to the thinking state
+     * Returns the forks picked up by this philosopher
+     * @param philosopherNumber the philosopher returning the forks
      */
-    private void putDownForks() {
+    @Override
+    public void returnForks(int philosopherNumber) {
         lock.lock();
         status[philosopherNumber] = THINKING;
         test(left_neighbor());
